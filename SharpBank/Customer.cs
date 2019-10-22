@@ -1,94 +1,87 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace SharpBank
 {
-    public class Customer
-    {
-        private String name;
-        private List<Account> accounts;
+   /// <summary>
+   /// Clase que representa un cliente en el sistema.
+   /// </summary>
+   public class Customer
+   {
+      #region Propiedades
+      /// <summary>
+      /// Nombre del cliente.
+      /// </summary>
+      private readonly string _name;
 
-        public Customer(String name)
-        {
-            this.name = name;
-            this.accounts = new List<Account>();
-        }
+      /// <summary>
+      /// Lista de cuentas que posee el cliente.
+      /// </summary>
+      private List<Account> _accounts;
 
-        public String GetName()
-        {
-            return name;
-        }
+      /// <summary>
+      /// Devuelve la lista de cuentas del cliente.
+      /// </summary>
+      /// <value>
+      /// Las cuentas.
+      /// </value>
+      public IEnumerable<Account> Accounts
+      {
+         get { return _accounts.ToArray(); }
+      }
+      #endregion
 
-        public Customer OpenAccount(Account account)
-        {
-            accounts.Add(account);
-            return this;
-        }
+      /// <summary>
+      /// Crea una entidad Customer sin cuentas.
+      /// </summary>
+      /// <param name="pName">Nombre del cliente.</param>      
+      public Customer(string pName)
+      {
+         _name = pName;
+         _accounts = new List<Account>();
+      }
 
-        public int GetNumberOfAccounts()
-        {
-            return accounts.Count;
-        }
+      /// <summary>
+      /// Devuelve el nombre del cliente.
+      /// </summary>
+      public string GetName() => _name;
 
-        public double TotalInterestEarned()
-        {
-            double total = 0;
-            foreach (Account a in accounts)
-                total += a.InterestEarned();
-            return total;
-        }
+      /// <summary>
+      /// Realiza apertura de cuenta.
+      /// </summary>
+      /// <param name="pAccountType">Tipo de cuenta.</param>   
+      public Account OpenAccount(AccountType pAccountType)
+      {
+         Account account = new Account(pAccountType);
+         _accounts.Add(account);
+         return account;
+      }
 
-        /*******************************
-         * This method gets a statement
-         *********************************/
-        public String GetStatement()
-        {
-            //JIRA-123 Change by Joe Bloggs 29/7/1988 start
-            String statement = null; //reset statement to null here
-            //JIRA-123 Change by Joe Bloggs 29/7/1988 end
-            statement = "Statement for " + name + "\n";
-            double total = 0.0;
-            foreach (Account a in accounts)
-            {
-                statement += "\n" + StatementForAccount(a) + "\n";
-                total += a.SumTransactions();
-            }
-            statement += "\nTotal In All Accounts " + ToDollars(total);
-            return statement;
-        }
+      /// <summary>
+      /// Retorna el total de cuentas que posee el cliente.
+      /// </summary>
+      public int GetNumberOfAccounts() => _accounts.Count;
 
-        private String StatementForAccount(Account a)
-        {
-            String s = "";
+      /// <summary>
+      /// Devuelve el total de interés pagado al cliente.
+      /// </summary>
+      public double GetTotalInterestEarned() => _accounts.Sum(sum => sum.GetInterestEarned());
 
-            //Translate to pretty account type
-            switch (a.GetAccountType())
-            {
-                case Account.CHECKING:
-                    s += "Checking Account\n";
-                    break;
-                case Account.SAVINGS:
-                    s += "Savings Account\n";
-                    break;
-                case Account.MAXI_SAVINGS:
-                    s += "Maxi Savings Account\n";
-                    break;
-            }
+      public string GetStatement()
+      {
+         StringBuilder statement = new StringBuilder();
+         statement.Append("Statement for " + _name + "\n");
 
-            //Now total up all the transactions
-            double total = 0.0;
-            foreach (Transaction t in a.transactions)
-            {
-                s += "  " + (t.amount < 0 ? "withdrawal" : "deposit") + " " + ToDollars(t.amount) + "\n";
-                total += t.amount;
-            }
-            s += "Total " + ToDollars(total);
-            return s;
-        }
+         double total = 0.0;
+         foreach (Account a in _accounts)
+         {
+            statement.Append("\n" + a.GetStatement() + "\n");
+            total += a.Balance;
+         }
 
-        private String ToDollars(double d)
-        {
-            return String.Format("${0:N2}", Math.Abs(d));
-        }
-    }
+         statement.Append("\nTotal In All Accounts " + Utils.ToDollars(total));
+         return statement.ToString();
+      }
+   }
 }

@@ -1,57 +1,65 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace SharpBank
 {
-    public class Bank
-    {
-        private List<Customer> customers;
+   /// <summary>
+   /// Clase que representa un banco en el sistema.
+   /// </summary>
+   public class Bank
+   {
+      #region Propiedades
+      /// <summary>
+      /// Lista de clientes que posee el banco.
+      /// </summary>
+      private List<Customer> _customers;
+      #endregion
 
-        public Bank()
-        {
-            customers = new List<Customer>();
-        }
+      /// <summary>
+      /// Inicializa una entidad <see cref="Bank"/> sin clientes.
+      /// </summary>
+      public Bank()
+      {
+         _customers = new List<Customer>();
+      }
 
-        public void AddCustomer(Customer customer)
-        {
-            customers.Add(customer);
-        }
+      /// <summary>
+      /// Se agrega el cliente indicado por <paramref name="pCustomer"/> al banco.
+      /// </summary>
+      /// <param name="pCustomer">Entidad Cliente.</param>   
+      public void AddCustomer(Customer pCustomer)
+      {
+         _customers.Add(pCustomer);
+      }
 
-        public String CustomerSummary()
-        {
-            String summary = "Customer Summary";
-            foreach (Customer c in customers)
-                summary += "\n - " + c.GetName() + " (" + Format(c.GetNumberOfAccounts(), "account") + ")";
-            return summary;
-        }
+      public string CustomerSummary()
+      {
+         StringBuilder s = new StringBuilder();
+         s.Append("Customer Summary");
 
-        //Make sure correct plural of word is created based on the number passed in:
-        //If number passed in is 1 just return the word otherwise add an 's' at the end
-        private String Format(int number, String word)
-        {
-            return number + " " + (number == 1 ? word : word + "s");
-        }
+         foreach (Customer c in _customers)
+            s.Append("\n - " + c.GetName() + " (" + Utils.ToPlural(c.GetNumberOfAccounts(), "account") + ")");
+         return s.ToString();
+      }
 
-        public double TotalInterestPaid()
-        {
-            double total = 0;
-            foreach (Customer c in customers)
-                total += c.TotalInterestEarned();
-            return total;
-        }
+      /// <summary>
+      /// Retorna el interés total pagado por el banco en todas las cuentas.
+      /// </summary>
+      public double TotalInterestPaid() => _customers.Sum(sum => sum.GetTotalInterestEarned());
 
-        public String GetFirstCustomer()
-        {
-            try
-            {
-                customers = null;
-                return customers[0].GetName();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.ToString());
-                return "Error";
-            }
-        }
-    }
+      /// <summary>
+      /// Retorna el nombre del primer cliente.
+      /// </summary>
+      public string GetFirstCustomer()
+      {
+         if (!_customers.Any())
+         {
+            Console.WriteLine("Error: there are not customers to get.");
+            return "Error";
+         }
+         return _customers.FirstOrDefault().GetName();
+      }
+   }
 }
