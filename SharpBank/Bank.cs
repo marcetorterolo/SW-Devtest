@@ -47,7 +47,10 @@ namespace SharpBank
       /// <summary>
       /// Retorna el interés total pagado por el banco en todas las cuentas.
       /// </summary>
-      public double TotalInterestPaid() => _customers.Sum(sum => sum.GetTotalInterestEarned());
+      public double TotalInterestPaid()
+      {
+         return _customers.Sum(sum => sum.GetTotalInterestEarned());
+      }
 
       /// <summary>
       /// Retorna el nombre del primer cliente.

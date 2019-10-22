@@ -1,6 +1,6 @@
-﻿using System;
+﻿using SharpBank.Rules;
+using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Text;
 
 namespace SharpBank
@@ -25,6 +25,11 @@ namespace SharpBank
       /// Numerador para las cuentas de tipo <see cref="AccountType.MaxiSavings"/> de un mismo cliente.
       /// </summary>
       private static int idAccMaxiSaving = 3000;
+
+      /// <summary>
+      /// Calculadora de interés
+      /// </summary>
+      private IInterestCalculator _interestCalculator;
 
       /// <summary>
       /// Historial de transacciones de la cuenta.
@@ -68,6 +73,16 @@ namespace SharpBank
       /// El Balance.
       /// </value>
       public double Balance { get; private set; }
+
+      /// <summary>
+      /// Devuelve la fecha del último retiro.
+      /// </summary>
+      public DateTime? LastWithdraw { get; private set; }
+
+      /// <summary>
+      /// Devuelve la fecha en que fue creada la cuenta.
+      /// </summary>
+      public DateTime DateCreate { get; }
       #endregion
 
       /// <summary>
@@ -95,7 +110,9 @@ namespace SharpBank
 
          Type = pAccountType;
          Balance = 0;
+         DateCreate = DateProvider.GetInstance().Now();
          _transactionsList = new List<Transaction>();
+         LastWithdraw = null;
       }
 
       /// <summary>
@@ -155,6 +172,7 @@ namespace SharpBank
          {
             _transactionsList.Add(new Transaction(-pAmount));
             Balance -= pAmount;
+            LastWithdraw = DateProvider.GetInstance().Now();
             return pAmount;
          }
       }
@@ -198,53 +216,24 @@ namespace SharpBank
          switch (this.Type)
          {
             case AccountType.Checking:
-               interestEarned = Balance * 0.001;
+               _interestCalculator = new InterestCalculatorChecking();
                break;
 
             case AccountType.Savings:
-               if (Balance <= 1000)
-                  interestEarned = Balance * 0.001;
-               else
-                  interestEarned = 1 + (Balance - 1000) * 0.002;
+               _interestCalculator = new InterestCalculatorSaving();
                break;
 
             case AccountType.MaxiSavings:
-               if (Balance <= 1000)
-                  interestEarned = Balance * 0.02;
-               else if (Balance <= 2000)
-                  interestEarned = 20 + (Balance - 1000) * 0.05;
-               else
-                  interestEarned = 70 + (Balance - 2000) * 0.1;
+               _interestCalculator = new InterestCalculatorMaxiSaving();
                break;
 
             case AccountType.NewMaxiSavings:
-               if (CheckIfWithdrawalExist(10))
-                  interestEarned = Balance * 0.001;
-               else
-                  interestEarned = Balance * 0.05;
-               break;
-
-            default:
-               interestEarned = 0;
+               _interestCalculator = new InterestCalculatorNewMaxiSaving(this.LastWithdraw);
                break;
          }
+
+         interestEarned = _interestCalculator.Calculate(Balance, this.DateCreate);
          return interestEarned;
-      }
-
-      public bool CheckIfWithdrawalExist(int days)
-      {
-         while (days >= 0)
-         {
-            foreach (Transaction t in Transactions)
-            {
-               if (t.Date.Date == (DateProvider.GetInstance().Now().AddDays(-days).Date))
-
-                  if (t.Amount < 0)
-                     return true;
-            }
-            days--;
-         }
-         return false;
       }
 
       /// <summary>

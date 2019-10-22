@@ -11,11 +11,35 @@ namespace SharpBank.Test
    public class AccountTest
    {
       [Test]
-      public void TestInterestEarned()
+      public void TestInterestEarned1()
       {
          Account ac = new Account(AccountType.Savings);
          ac.Deposit(3000.0);
          Assert.AreEqual(5.0, ac.GetInterestEarned());
+      }
+
+      [Test]
+      public void TestInterestEarned2()
+      {
+         // create accounts 
+         Account accChecking = new Account(AccountType.Checking);
+         Account accSavings = new Account(AccountType.Savings);
+         Account accNMaxiSavings = new Account(AccountType.NewMaxiSavings);
+
+         // deposit
+         accChecking.Deposit(10000.0);
+         accSavings.Deposit(1000.0);
+         accNMaxiSavings.Deposit(1000.0);
+
+         double total = accChecking.GetInterestEarned();
+         Assert.AreEqual(total, accChecking.Balance * 0.001);
+
+         total = accNMaxiSavings.GetInterestEarned();
+         Assert.AreEqual(total, accNMaxiSavings.Balance * 0.05);
+
+         accNMaxiSavings.Withdraw(100.0);
+         total = accNMaxiSavings.GetInterestEarned();
+         Assert.AreEqual(total, accNMaxiSavings.Balance * 0.001);
       }
 
       [Test]
