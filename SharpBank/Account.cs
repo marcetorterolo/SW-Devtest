@@ -24,7 +24,7 @@ namespace SharpBank
       /// <summary>
       /// Numerador para las cuentas de tipo <see cref="AccountType.MaxiSavings"/> de un mismo cliente.
       /// </summary>
-      private static int idAccMaxiSaving = 3000;
+      private static int _idAccMaxiSaving = 3000;
 
       /// <summary>
       /// Calculadora de interés
@@ -89,8 +89,6 @@ namespace SharpBank
       /// Inicializa una nueva instancia de la clase <see cref="Account"/> sin transacciones.
       /// </summary>
       /// <param name="pAccountType">Tipo de cuenta.</param>
-      /// <param name="pInterestCalculator">Calculadora de interés.</param>
-      /// <param name="pDateProvider">Proveedor de fecha.</param>
       public Account(AccountType pAccountType)
       {
          switch (pAccountType)
@@ -104,7 +102,7 @@ namespace SharpBank
                break;
 
             case AccountType.MaxiSavings:
-               Number = ++idAccMaxiSaving;
+               Number = ++_idAccMaxiSaving;
                break;
          }
 
@@ -161,6 +159,7 @@ namespace SharpBank
       /// </summary>
       /// <param name="pAmount">Monto del retiro.</param>
       /// <returns>Monto retirado.</returns>
+      /// <exception cref="System.ArgumentException">amount must be greater than zero</exception>
       /// <exception cref="System.ArgumentException">insufficient funds</exception>
       public double Withdraw(double pAmount)
       {
@@ -192,7 +191,7 @@ namespace SharpBank
                throw new ArgumentException("the accounts must be different");
             else
             {
-                try
+               try
                {
                   return pDestination.Deposit(this.Withdraw(pAmount));
                }
@@ -201,15 +200,18 @@ namespace SharpBank
                   Console.WriteLine(e.Message);
                   return -1;
                }
-            }            
+            }
          }
          else
             return 0;
       }
 
       /// <summary>
-      /// Devuelve el total de interés ganado en la cuenta.
+      /// Calcula el total de interés ganado en la cuenta.
       /// </summary>
+      /// <returns>
+      /// Interés ganado.
+      /// </returns>
       public double GetInterestEarned()
       {
          double interestEarned;
@@ -241,11 +243,12 @@ namespace SharpBank
       /// de la misma, asi como también cada una de las transacciones
       /// junto con el importe.
       /// </summary>
-      // EJEMPLO:
-      //Savings Account
-      //  deposit $4.000,00
-      //  withdrawal $200,00
-      //Total $3.800,00
+      /// <example>
+      /// Savings Account
+      ///   deposit $4.000,00
+      ///   withdrawal $200,00
+      /// Total $3.800,00
+      /// </example>
       public string GetStatement()
       {
          StringBuilder s = new StringBuilder();
